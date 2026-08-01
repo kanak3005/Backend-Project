@@ -1,22 +1,35 @@
 class ApiError extends Error {
     constructor(
-        statusCode, 
-        message="Something went wrong",
+        statusCode,
+        message = "Something went wrong",
         errors = [],
-        stactk = ""
-    ){
-        super(message)
+        stack = ""
+    ) {
+        super(message) // Error(message) ko call karo isme message stack name sab initialize ho jaate h 
+
         this.statusCode = statusCode
-        this.data = null
+        this.data = null // data ke andar actual information hoti h user ki age , name, email, address etc. & agar error h to data null hota h
         this.message = message
-        this.success = false 
+        this.success = false // agar error h to success kabhi true nhi hogi
         this.errors = errors
 
-        if(statck){
-            this.stack = stactk
-        }else{
+        if (stack) { // agar stack pass kiya h to usse use karo, warna Error.captureStackTrace() use karo
+            this.stack = stack
+        } else {
             Error.captureStackTrace(this, this.constructor)
         }
+        
+        //Error.captureStackTrace() -
+// Ye Node.js ka function hai. Ye automatically likhta hai
+// Error
+// ↓
+// controller
+// ↓
+// service
+// ↓
+// app.js
+// Agar ye line nahi hoti to debugging mushkil ho jati.
     }
 }
-export {ApiError}
+
+export { ApiError }

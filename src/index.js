@@ -7,8 +7,9 @@ import app from "./app.js";
 
 dotenv.config({ path: "./.env" }) //.env file ko load karta hai.
 
-connectDB()
-.then(() => {
+connectDB()//Ye MongoDB se connection establish karega. & Har async function Promise return karta hai., so we can use .then() and .catch() to handle success and failure cases.
+.then(() => { // .then - > Agar Promise successfully complete ho jaye,
+//to ye function chalao.
     app.on("error", (error) => {
         console.log("ERR:", error);
         throw error;
