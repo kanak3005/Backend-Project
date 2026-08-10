@@ -17,5 +17,15 @@ app.use(cookieParser()) // Browser se aane wali raw cookie string ko parse karke
 //     username: "kanak"
 // }
 
+// routes
+import userRouter from "./routes/user.routes.js"
 
+
+//routes declaration
+app.use("/api/v1/users", userRouter) 
+
+//     /user -> ke baad jo bhi methods likhe jayenge vo sab routes.js m likhenge
+// http://localhost:8000/api/v1/users - jaise hi humne /users likha aab saara control userRouter ke pass (user.routes.js ) chla jayega vha /register - > ke baad registerUser method chlega
+// http://localhost:8000/api/v1users/register
+//  http://localhost:8000/api/v1/users/login - bar bar import krne ki need nhi app.js same hi rhega bss user.routes m jaake register ki jgh login ayega but humne login function bnaya nhi h ye bss eg tha
 export { app }

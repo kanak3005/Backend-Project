@@ -1,4 +1,4 @@
-//Wrapper Function for async functions to handle errors in Express.jsj
+//Wrapper Function for async functions to handle errors in Express.js
 
 
 // Normally Express sirf synchronous errors ko automatically catch karta hai.

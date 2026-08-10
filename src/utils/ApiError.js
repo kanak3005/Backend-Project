@@ -17,7 +17,7 @@ class ApiError extends Error {
             this.stack = stack
         } else {
             Error.captureStackTrace(this, this.constructor)
-        }
+        }//Ye automatically ek stack trace generate karta hai jo batata hai error kaha se aaya (kis function se, kis file se) — debugging ke liye bahut useful hai.
         
         //Error.captureStackTrace() -
 // Ye Node.js ka function hai. Ye automatically likhta hai

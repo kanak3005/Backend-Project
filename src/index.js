@@ -3,7 +3,7 @@ import dns from 'dns'; // DNS - Domain Name System Jab bhi Node.js kisi website 
 dns.setServers(['8.8.8.8', '8.8.4.4']);//"Apne default DNS ki jagah Google ke DNS servers use karo."
 import dotenv from "dotenv"; //.env file se variables read karna.
 import connectDB from "./db/index.js";
-import app from "./app.js";
+import { app } from "./app.js";
 
 dotenv.config({ path: "./.env" }) //.env file ko load karta hai.
 
