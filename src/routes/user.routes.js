@@ -2,9 +2,15 @@ import { Router } from 'express';
 import { registerUser } from '../controllers/user.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 
+//Ye user.routes.js file decide karti hai ki /register request aane par pehle Multer chalega aur uske baad registerUser controller chalega.
+//Kis URL par kaunsa middleware aur kaunsa controller execute hoga, ye decide karna.
 const router = Router();
 router.route("/register").post(
-    upload.fields([
+    upload.fields([ //"Multer, registration request mein mujhe multiple types ki files milengi." Aur woh files hain:  avatar,coverImage
+//Mujhe 2 file fields chahiye:
+// 1. avatar → max 1
+// 2. coverImage → max 1
+
         {
             name: "avatar",
             maxCount: 1
@@ -15,7 +21,7 @@ router.route("/register").post(
 
         }
     ]),
-    registerUser)
+    registerUser) //Jab /register par POST request aaye, pehle upload.fields() execute karo, uske baad registerUser execute karo.
 //router.route("/login").post(login)
 
 export default router;

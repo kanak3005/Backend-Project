@@ -18,8 +18,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
    // get user details from frontend
-const {fullname, email, username, password} = req.body // req.body - ssara data aa jaata ye express provide krta h
-console.log("email: ", email);
+const {fullname, email, username, password} = req.body // req.body - sara data aa jaata ye express provide krta h
+//console.log("USER Detail", req.body);
 
 
 // validation - kch empty toh nhi hai ? instead of ek - ek field check krte humne ek sath check krlia
@@ -27,34 +27,43 @@ console.log("email: ", email);
 //   throw new ApiError(400, "fullname is required")
 // }
 if(
-  [fullname,email,username, password].some((field) => 
+  [fullname,email,username, password].some((field) =>  //.some - Kya array mein kam se kam ek element condition satisfy karta hai?
   field?.trim() === "") // if koi field empty h toh return true
 ){
- throw new ApiError(400, "All fields is required")
+ throw new ApiError(400, "All fields is required") // agar true h to ye error dega
 }
 
 
-// check if user  is already exist check - uername, email
-const existedUser = User.findOne({
-  $or: [{ username }, { email }]
+// check if user  is already exist check - username, email
+const existedUser = await User.findOne({ //User.findOne() - Kya koi aisa user already exist karta hai jiska username ya email same hai?
+    $or: [{ username }, { email }] // username or email
 })
 
 if(existedUser){
   throw new ApiError(409, "User with email or username already exist")
 }
-console.log(existedUser);
+//console.log(existedUser);
 
 // check for images ,check for avatar
- // multer = req.files ka access de deta hai
- const avatarLocalPath = req.files?.avatar[0]?.path; // multer.middleware wali file se humhe path kaoriginal name mila jayega jo yha pass krdega
- const coverImageLocalPath =  req.files?.coverImage[0]?.path;
+ // multer = req.files ka access de deta hai ( req.files - avatar, CoverImage)
+ const avatarLocalPath = req.files?.avatar[0]?.path; // req.files.avatar[0] - first avatar file( maxCnt = 1) so normally first/only file [0] par hai.
+ //Local file path. -> Example:  ./public/temp/kanak.jpg
+ //const coverImageLocalPath =  req.files?.coverImage[0]?.path;
+// console.log("Req.files:", req.files);
+
+// check coverimage path h ya nhi if yes - then give a path to coverImageLocalPath
+let coverImageLocalPath;
+if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+  coverImageLocalPath = req.files.coverImage[0].path;
+}
+
 
  if(!avatarLocalPath){
 throw new ApiError(400, "Avatar file is required ")
  }
 
 //upload them to cloudinary
-const avatar = await uploadOnCloudinary(avatarLocalPath);
+const avatar = await uploadOnCloudinary(avatarLocalPath); // localPath cloudinary ko bhej do - response m vo ek url de dega
 const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
 if(!avatar){
@@ -63,15 +72,16 @@ if(!avatar){
 
 const user = await User.create({
   fullname,
-  avatar:avatar.url,
-  coverImage: coverImage?.url || "",
+  avatar:avatar.url, // mongoDb m actual image ki jghusi url save krenge
+  coverImage: coverImage?.url || "", // agar cloudinary se image mil gyi to save kro , vrna null save kro
   email,
   password,
   username: username.toLowerCase()
 })
 
     const createdUser = await User.findById(user._id).select(
-      "-password -refreshToken"
+      "-password -refreshToken"  // - means exclude.
+      // Result mein password aur refreshToken mat do. password, refresh token response m nhi bhejna
     )
 if(!createdUser){
   throw new ApiError(500, "Something went wrong while registering a user!")
@@ -79,7 +89,7 @@ if(!createdUser){
 
 
 // return res
-return res.status(201).json(
+return res.status(201).json(//201 Created - New resource successfully created.   .json() - Frontend ko JSON response bhejo.
   new ApiResponse(200, createdUser, "User Registered SuccessFully! 🎉")
 )
 })
