@@ -51,12 +51,16 @@ const userSchema = new Schema (
 );
  userSchema.pre("save", async function () {
 
-    if (!this.isModified("password")) {
+    if (!this.isModified("password")) { // agar password change nhi hua toh yhi se return kr denge - Password ko again hash nahi karenge.
         return;
     }
 
     this.password = await bcrypt.hash(this.password, 10);
 });
+userSchema.methods.isPasswordCorrect = async function (password) { 
+  // bcrypt internally check karega ki entered password stored hash ke corresponding hai ya nahi.
+  return await bcrypt.compare(password, this.password)
+}
 
     userSchema.methods.generateAccessToken = function(){
      return jwt.sign({

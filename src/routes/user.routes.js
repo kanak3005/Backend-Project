@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { registerUser } from '../controllers/user.controller.js';
+import {loginUser, logoutUser, registerUser } from '../controllers/user.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 //Ye user.routes.js file decide karti hai ki /register request aane par pehle Multer chalega aur uske baad registerUser controller chalega.
 //Kis URL par kaunsa middleware aur kaunsa controller execute hoga, ye decide karna.
@@ -22,6 +23,8 @@ router.route("/register").post(
         }
     ]),
     registerUser) //Jab /register par POST request aaye, pehle upload.fields() execute karo, uske baad registerUser execute karo.
-//router.route("/login").post(login)
+router.route("/login").post(loginUser)
+// secured route 
+router.route("/logout").post(verifyJWT, logoutUser)
 
 export default router;

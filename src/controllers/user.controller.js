@@ -5,6 +5,35 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { upload } from '../middlewares/multer.middleware.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 
+// //User ID
+//    ↓
+// Database se user nikalo
+//    ↓
+// Access Token generate karo
+//    ↓
+// Refresh Token generate karo
+//    ↓
+// Refresh Token DB me save karo
+//    ↓
+// Dono tokens return karo
+
+const generateAccessAndRefreshTokens = async (userId) => {
+  try{
+     const user = await User.findById(userId)
+     const accessToken = user.generateAccessToken()
+     const refreshToken = user.generateRefreshToken()
+
+     // refresh token ko db m kaise daale ?
+     user.refreshToken = refreshToken
+    await user.save({ validateBeforeSave: false })
+
+    return {accessToken, refreshToken}
+  }
+
+  catch(error){
+    throw new ApiError(500, "Something went wrong while generating refresh and access token")
+  }
+}
 const registerUser = asyncHandler(async (req, res) => {
    // get user details from frontend
    // validation ( username shi h ya nhi , email format theek h ya nhi , ye kch empty toh nhi hai)
@@ -93,4 +122,93 @@ return res.status(201).json(//201 Created - New resource successfully created.  
   new ApiResponse(200, createdUser, "User Registered SuccessFully! 🎉")
 )
 })
-export { registerUser };
+
+const loginUser = asyncHandler( async (req, res) => {
+// req body -> data
+// username or email
+// find the user 
+// password check if login 
+// password agr shi then generate access token & refresh token generate krke user ko bhejenge
+// tokens ko cookie m send krte h
+
+// get data from client/frontend 
+const {email, username, password } = req.body
+
+if( !email || !username){
+  throw new ApiError(400, "username or email is required")
+}
+// find the user
+const user = User.findOne({
+  $or: [{username}, {email}] //  ya to username mil jaaye ya email mil jaaye DB m
+})
+if(!user){
+  throw new ApiError(404, "User Does Not Exist")
+}
+//check password
+const isPasswordValid = await user.isPasswordCorrect(password)
+
+if(!isPasswordValid){
+  throw new ApiError(404, "Password is incorrect");
+}
+
+  const {accessToken, refreshToken} = await 
+  generateAccessAndRefreshToken(user._id)
+
+const loggedInUser = await User.findById(user._id).
+select("-password -refreshToken")
+
+
+// send cookies
+const options = {
+  httpOnly: true, // ye cookie sirf server se modify ho skti h frontend ki jgh
+  secure: true
+}
+return res
+.status(200)
+.cookie("accessToken",accessToken, options)
+.cookie("refreshToken", refreshToken, options)
+.json(
+  new ApiResponse( // utils folder m jo humne ApiResponse file bnayi vha se hum --
+    200, //status code
+    //data
+    {
+      user: loggedInUser, accessToken, refreshToken
+    },
+    // message
+    "User logged In Successfully" // message
+  )
+)
+})
+
+
+// logout 
+
+const logoutUser = asyncHandler(async(req, res) => {
+ await User.findByIdAndUpdate(
+    req.user._id,
+    {
+        $set: {
+          refreshToken: undefined
+        }
+      },
+        {
+          new: true
+        }
+    
+  )
+  const options = {
+  httpOnly: true, // ye cookie sirf server se modify ho skti h frontend ki jgh
+  secure: true
+}
+return res.
+status(200)
+.clearCookie("accessToken", options)
+.clearCookie("refershToken", options)
+.json(new apiResponse(200, {}, "User logged Out"))
+})
+
+export { 
+  registerUser,
+   loginUser, 
+  logoutUser
+};
