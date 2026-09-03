@@ -76,8 +76,8 @@ userSchema.methods.isPasswordCorrect = async function (password) {
     // noramlly refresh token valid for 7d,15d,30d tak valid hote h
       return jwt.sign({
       _id: this._id, 
-     }, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+     }, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY
      })
     }
 export const User = mongoose.model('User', userSchema); // yha model create hua
