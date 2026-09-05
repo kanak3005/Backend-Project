@@ -54,9 +54,10 @@ const userSchema = new Schema (
     if (!this.isModified("password")) { // agar password change nhi hua toh yhi se return kr denge - Password ko again hash nahi karenge.
         return;
     }
-
+   // agar password change hua toh password ko hash karenge
     this.password = await bcrypt.hash(this.password, 10);
 });
+// ye check karega ki entered password stored hash ke corresponding hai ya nahi. isko hum login / change password ke time use karenge.
 userSchema.methods.isPasswordCorrect = async function (password) { 
   // bcrypt internally check karega ki entered password stored hash ke corresponding hai ya nahi.
   return await bcrypt.compare(password, this.password)

@@ -261,9 +261,115 @@ throw new ApiError(401, error?.message || "Invalid refresh token")
 }
 
 })
+
+const changePassword = asyncHandler(async (req, res) => {
+  const {oldPassword, newPassword} = req.body
+  const user = User.findById(req.user?._id) // req.user - ye auth.middleware.js m set hua h, ye user ka data contain krta h vha se hum user ki id le rhe h
+ const isPasswordCorrect = await user.isPasswordCorrect(oldPassword) // isPasswordCorrect - ye user.model.js m likha h, ye check karega ki entered password stored hash ke corresponding hai ya nahi.
+  if(!isPasswordCorrect){
+    throw new ApiError(400, "Old password is incorrect")
+  }
+  user.password = newPassword // new password ko hash krne ka kaam pre save hook m ho jaayega jo humne user.model.js m likha h - ye password humne user m set kiya h save nhi
+  await user.save({validateBeforeSave: false}) // validateBeforeSave: false ka matlab: Save karte waqt Mongoose ki normal validation dobara mat chalao.
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
+
+// how to get a cuurent user
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+  .status(200)
+  .json(new ApiResponse(200, req.user, "Current user fetched successfully"))
+})
+
+const updateAccountDetails = asyncHandler(async(req,res) => {
+const {fullname, email} = req.body
+
+  if(!fullname || !email){
+    throw new ApiError(400, "All fields are required")
+}
+   const user =  await User.findByIdAndUpdate( // findByIdAndUpdate -Kisi particular _id wale document ko find karo aur usko update karo.
+      req.user?._id,
+      {
+        $set:  { // given fields ki values ko update/set karo
+          fullname: fullname,
+          email: email.toLowerCase()
+        }
+      },
+      {new: true} // update hone ke baad jo info/details  h vo return hori 
+).select("-password")
+return res
+.status(200)
+.json(new ApiResponse(200, user, "Account details updated successfully"))
+})
+
+const updateUserAvatar = asyncHandler(async(req, res) => {
+  const avatarLocalPath = req.file?.path 
+  //req.file kya hai?
+// Jab user frontend/Postman se avatar image upload karta hai, multer middleware us uploaded file ki information req.file me daal deta hai.
+// "Jo avatar user ne upload kiya hai, woh server ke kis local location par temporarily saved hai? Uska path mujhe de do."
+
+  if(!avatarLocalPath){
+    throw new ApiError(400, "Avatar file is required")
+
+}
+const avatar = await uploadOnCloudinary(avatarLocalPath) //Local image ko Cloudinary par upload karo.
+
+if(!avatar.url){ //Cloudinary se URL mila ya nahi check karo.
+  throw new ApiError(400, "Something went wrong while uploading avatar")
+}
+    const user = await User.findByIdAndUpdate( //Currently logged-in user ko find karke uska avatar update karo.
+      req.user?._id,
+      {
+        $set: {
+          avatar: avatar.url //MongoDB me Cloudinary URL save karo.
+        }
+      },
+      {new: true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar updated successfully"))
+})
+
+const updateUserCoverImage = asyncHandler(async(req, res ) => {
+  const coverImageLocalPath = req.file?.path //req.file kya hai?
+//Jab user frontend/Postman se avatar image upload karta hai, multer middleware us uploaded file ki information req.file me daal deta hai.
+
+  if(!coverImageLocalPath){
+    throw new ApiError(400, "Cover image file is required")
+  }
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+  if(!coverImage.url){
+    throw new ApiError(400, "Something went wrong while uploading cover image")
+  }
+   const user =  await User.findByIdAndUpdate(
+    req.user?._id,{
+      $set:{
+        coverImage: coverImage.url
+      }
+    },
+    {new: true}
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, user, "Cover image updated successfully"))
+    
+})
+ // agar files update krni ho 
+
+
 export { 
   registerUser,
    loginUser,
   logoutUser,
-  refreshAccessToken
+  refreshAccessToken,
+  changePassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage
 };
