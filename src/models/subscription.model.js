@@ -1,4 +1,5 @@
 import mongoose, {Schema} from 'mongoose';
+
 const subscriptionSchema = new Schema({
     //ObjectId → kis document ki ID hai
     //ref → kis Model/collection mein us ID ko dhundhna hai

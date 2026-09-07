@@ -276,7 +276,7 @@ const changePassword = asyncHandler(async (req, res) => {
   .json(new ApiResponse(200, {}, "Password changed successfully"))
 })
 
-// how to get a cuurent user
+// how to get a current user
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
   .status(200)
@@ -328,6 +328,9 @@ if(!avatar.url){ //Cloudinary se URL mila ya nahi check karo.
       },
       {new: true}
     ).select("-password")
+    // delete old avatar from cloudinary
+ const oldAvatarPublicId = user.avatar?.public_id;
+await deleteFromCloudinary(oldAvatarPublicId); 
 
     return res
     .status(200)
@@ -359,7 +362,72 @@ const updateUserCoverImage = asyncHandler(async(req, res ) => {
   .json(new ApiResponse(200, user, "Cover image updated successfully"))
     
 })
- // agar files update krni ho 
+
+const getUserChannelProfile =  asyncHandler(async(req, res) => {
+  const {username} = req.params // hum username url se le rhe h, jaise /api/users/:username
+  if(!username?.trim()){ // trim() - ye string ke starting aur ending m jo extra space h usko remove krta h
+    throw new ApiError(400, "Username is required")   
+  }
+  const channel = await User.aggregate([
+   {
+    $match:{username: username?.toLowerCase()}
+   },
+   {
+    // humhe pw channel ke subscriber count krne h - toh hum har document m vo channel find krke count krenge ki us channel ke kitne subscribers h
+    $lookup:{ //Subscribers find karna
+      from: " subscriptions", // subscription collection me jao
+      localfield: "_id", // Current User document ki _id ko use karo. _id = user1
+      foreignField: "channel", // subscriptions collection me channel field check kro. user._id = subscription.channe match krega
+      as: "subscribers" // Jo matching subscriptions mili hain, unko ek array me store karo:
+    }
+   },
+   // aab mene / kisi user ne kitne channels subscribe kiye h - vo count krne h - toh hum har uss user ke document m vo channel find krke count krenge ki us user ne kitne channels subscribe kiye h
+   {
+  $lookup: {
+    from: "subscriptions", //subscriptions collection me jao.
+    localField: "_id", //Current User document ki _id ko use karo. _id = user1
+    foreignField: "subscriber", // Subscription collection me: subscriber field ke andar U1 search karo.
+    as: "subscribedTo"  // subscribed channel
+  }
+   },
+   {
+      addFields: { // Existing document me naye calculated fields add karo. we add 3 fields - subscribersCount, channelSubscribedToCount, isSubscribed
+      subscribersCount: {$size: $subscribers }, // $size - array ki length/ count nikalta h
+     // subscribers: [U2,U3,U4,U5 ] , $size: "$subscribers" = 4
+   // $ - Document ke andar subscribers field ki value.
+      channelSubscribedToCount: {$size: $subscribedTo }
+   },
+
+   //Currently logged-in user ne ye channel subscribe kiya hai ya nahi?
+   isSubscribed: { // check loginn user ne is channel ko subscribe kiya h ya nhi means subscribe button pr "subscribed" hai ya nhi
+    $cond: {
+      if: {$in: [req.user?._id, $subscribers.subscriber]}, // agar login user ka id subscribers array m h toh true
+      then: true,
+      else: false
+    }
+   }
+  },{
+    $project: { //Final response me kaunse fields rakhne hain decide karna.
+      fullname: 1,
+      username: 1,
+      email: 1,
+      avatar: 1,
+      coverImage: 1,
+      subscribersCount: 1,
+      channelSubscribedToCount: 1,
+      isSubscribed: 1
+    }
+
+  }
+   ])
+   if(!channel?.length){
+    throw new ApiError(404, "Channel not found")
+   }
+   return res
+   .status(200)
+   .json(new ApiResponse(200, channel[0], "Channel profile fetched successfully"))
+})
+
 
 
 export { 
@@ -371,5 +439,6 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelProfile
 };
