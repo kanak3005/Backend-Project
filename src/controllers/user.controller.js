@@ -427,8 +427,59 @@ const getUserChannelProfile =  asyncHandler(async(req, res) => {
    .status(200)
    .json(new ApiResponse(200, channel[0], "Channel profile fetched successfully"))
 })
-
-
+//Ye getWatchHistory controller current logged-in user
+//  ki watch history nikalta hai, aur har watched video ke saath us video ke owner ki basic information (fullname, username, avatar) bhi laata hai.
+// User → watchHistory IDs → Videos → Video owner → Owner details → Response
+const getWatchHistory = asyncHandler(async(req, res) => {
+const user = await User.aggregate([ // users collection ke data par multiple database operations perform karo.
+  {
+    $match: { //$match ka kaam hai:
+// Database mein sirf required document select karna.
+// Yahan hum current logged-in user ko find kar rahe hain.
+      _id: new mongoose.Types.ObjectId(req.user?._id) //Agar req.user._id string form mein hai, to hum usko MongoDB ObjectId mein convert kar rahe hain.
+    }
+  },{
+    //User ki watchHistory mein jo Video IDs hain, un IDs se videos collection ke actual video documents nikalna.
+    $lookup: { // mongoDb ka Join operation
+      from: "videos", // Videos collection se data lao.
+      localField: "watchHistory", // Current collection (users) mein jis field se matching karni hai, uska naam.
+      foreignField: "_id",
+      //localField = mere/current document mein field
+  // foreignField = jis collection se data la raha hoon, usmein matching field.
+      as: "watchHistory",
+      pipeline: [ //Videos ko lookup karne ke baad un videos par additional operations perform karo.
+        {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+          pipeline: [
+            {
+              $project: {
+                fullname: 1,
+                username: 1,
+                avatar: 1
+              }
+            }
+          ]
+        }
+      },{
+        $addFields: {
+            owner: {
+              $first: "$owner" //$lookup normally result ko array mein deta hai.But humein ek hi owner chahiye. so ye array ka first element nikaal dega.
+            }
+        }
+      }
+      ]
+    }
+  }
+])
+return res
+.status(200)
+.json(new ApiResponse(200, user[0]?.watchHistory, "Watch history fetched successfully")) //Aggregation always returns an array.
+// Humne $match mein _id se ek specific user find kiya hai.
+})
 
 export { 
   registerUser,
@@ -440,5 +491,6 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
-  getUserChannelProfile
-};
+  getUserChannelProfile,
+  getWatchHistory,
+}
