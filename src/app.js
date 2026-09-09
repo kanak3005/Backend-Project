@@ -3,7 +3,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 
 const app = express() 
-app.use(cors({ // cors means - main iss origin se aani wali request ko allow krta hu baaki sab blocked krdo || app.use(cors()) - sabhi origin ko allow krdo which is not good for production
+app.use(cors({ // cors means - main iss origin se aani wali request ko allow krta hu baaki sab blocked krdo || app.use(cors()) - sabhi origin ko allow krdo except which is not good for production
     origin: process.env.CORS_ORIGIN,
     credentials: true //  Credentials: Cookies | Authorization headers | Sessions - without this browser will not send cookies in cross-origin requests. So, if you want to send cookies in cross-origin requests, you need to set this option to true.
 }))
@@ -17,8 +17,11 @@ app.use(cookieParser()) // Browser se aane wali raw cookie string ko parse karke
 //     username: "kanak"
 // }
 
+// Cookie browser ke paas hoti hai.
+// Session server ke paas hota hai.
+
 // routes
-import userRouter from "./routes/user.routes.js"
+import { router as userRouter } from "./routes/user.routes.js"
 
 
 //routes declaration 

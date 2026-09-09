@@ -1,8 +1,10 @@
+import mongoose from "mongoose";
 import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiError} from "../utils/ApiError.js"
 import {User} from"../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { upload } from '../middlewares/multer.middleware.js';
+import { Subscription } from "../models/subscription.model.js";
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from "jsonwebtoken"
 // //User ID
@@ -194,8 +196,8 @@ const logoutUser = asyncHandler(async(req, res) => {
  await User.findByIdAndUpdate(
     req.user._id,
     {
-        $set: {
-          refreshToken: undefined
+        $unset: {
+          refreshToken: 1 //this remove the field from document
         }
       },
         {
@@ -376,7 +378,7 @@ const getUserChannelProfile =  asyncHandler(async(req, res) => {
     // humhe pw channel ke subscriber count krne h - toh hum har document m vo channel find krke count krenge ki us channel ke kitne subscribers h
     $lookup:{ //Subscribers find karna
       from: " subscriptions", // subscription collection me jao
-      localfield: "_id", // Current User document ki _id ko use karo. _id = user1
+      localField: "_id", // Current User document ki _id ko use karo. _id = user1
       foreignField: "channel", // subscriptions collection me channel field check kro. user._id = subscription.channe match krega
       as: "subscribers" // Jo matching subscriptions mili hain, unko ek array me store karo:
     }
@@ -385,29 +387,31 @@ const getUserChannelProfile =  asyncHandler(async(req, res) => {
    {
   $lookup: {
     from: "subscriptions", //subscriptions collection me jao.
-    localField: "_id", //Current User document ki _id ko use karo. _id = user1
+   localField: "_id", //Current User document ki _id ko use karo. _id = user1
     foreignField: "subscriber", // Subscription collection me: subscriber field ke andar U1 search karo.
     as: "subscribedTo"  // subscribed channel
   }
    },
    {
-      addFields: { // Existing document me naye calculated fields add karo. we add 3 fields - subscribersCount, channelSubscribedToCount, isSubscribed
-      subscribersCount: {$size: $subscribers }, // $size - array ki length/ count nikalta h
-     // subscribers: [U2,U3,U4,U5 ] , $size: "$subscribers" = 4
-   // $ - Document ke andar subscribers field ki value.
-      channelSubscribedToCount: {$size: $subscribedTo }
-   },
-
-   //Currently logged-in user ne ye channel subscribe kiya hai ya nahi?
-   isSubscribed: { // check loginn user ne is channel ko subscribe kiya h ya nhi means subscribe button pr "subscribed" hai ya nhi
-    $cond: {
-      if: {$in: [req.user?._id, $subscribers.subscriber]}, // agar login user ka id subscribers array m h toh true
-      then: true,
-      else: false
+    $addFields: {
+      subscribersCount: {
+        $size: "$subscribers"
+      },
+      channelSubscribedToCount: {
+        $size: "$subscribedTo"
+      },
+      // Currently logged-in user ne ye channel subscribe kiya hai ya nahi?
+      isSubscribed: {
+        $cond: {
+          if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+          then: true,
+          else: false
+        }
+      }
     }
-   }
-  },{
-    $project: { //Final response me kaunse fields rakhne hain decide karna.
+   },
+   {
+    $project: {
       fullname: 1,
       username: 1,
       email: 1,
@@ -417,8 +421,7 @@ const getUserChannelProfile =  asyncHandler(async(req, res) => {
       channelSubscribedToCount: 1,
       isSubscribed: 1
     }
-
-  }
+   }
    ])
    if(!channel?.length){
     throw new ApiError(404, "Channel not found")
