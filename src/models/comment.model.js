@@ -2,7 +2,12 @@ import mongoose, {Schema} from 'mongoose';
 import mongooseAggreratePaginate from
  'mongoose-aggregate-paginate-v2';
 
-const commentSchema = new Schema(
+
+ //Comment
+// ├── content  → comment kya hai
+// ├── video    → kis video par comment hai
+// └── owner    → kis user ne comment kiya
+const commentSchema = new Schema( //Ek Comment document ke andar kaun-kaun se fields honge aur unka data type kya hoga.
     {
         content: {
             type: String,
@@ -14,11 +19,11 @@ const commentSchema = new Schema(
         },
         owner:{
             type: Schema.Types.ObjectId,
-            ref: "Video"
+            ref: "User"
         }
     },
         {
-            timestamps: true
+            timestamps: true //Mongoose automatically do fields add karega: updated at , comment at
         }
     
 )
