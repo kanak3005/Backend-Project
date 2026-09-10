@@ -86,6 +86,7 @@ if(existedUser){
 
 // check coverimage path h ya nhi if yes - then give a path to coverImageLocalPath
 let coverImageLocalPath;
+// Agar files exist karti hain AND coverImage ek array hai AND us array mein kam se kam ek file hai...
 if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
   coverImageLocalPath = req.files.coverImage[0].path;
 }
@@ -102,10 +103,10 @@ const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 if(!avatar){
   throw new ApiError(400, "Avatar file is required ");
 }
-
+//User.create({...}) registration ke time user ki information ko process karke MongoDB ke users collection mein ek new user document create karta hai.
 const user = await User.create({
   fullname,
-  avatar:avatar.url, // mongoDb m actual image ki jghusi url save krenge
+  avatar:avatar.url, // mongoDb m actual image ki jgh usi url save krenge
   coverImage: coverImage?.url || "", // agar cloudinary se image mil gyi to save kro , vrna null save kro
    email: email.toLowerCase(),
   password,
@@ -168,6 +169,10 @@ select("-password -refreshToken")
 
 
 // send cookies
+//Login ke baad backend JWT tokens ko
+//  Set-Cookie ke through browser ko bhejta hai; 
+// browser cookies store karta hai aur subsequent requests 
+// mein appropriate cookies automatically send karta hai, jise verifyJWT verify karta hai.
 const options = {
   httpOnly: true, // ye cookie sirf server se modify ho skti h frontend ki jgh
   secure: true
@@ -215,7 +220,7 @@ status(200)
 .clearCookie("refreshToken", options)
 .json(new ApiResponse(200, {}, "User logged Out"))
 })
-
+//Jab access token expire ho jaye, tab user ko dobara login karaye bina ek naya access token generate karna.
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
@@ -223,7 +228,7 @@ if (!incomingRefreshToken){
   throw new ApiError(401, "unauthorized request")
 }
 try{
-  
+  //Check karo ki refresh token genuine hai aur expire/tamper nahi hua.
 const decodedToken =  jwt.verify(
     incomingRefreshToken,
     process.env.REFRESH_TOKEN_SECRET
@@ -288,7 +293,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async(req,res) => {
 const {fullname, email} = req.body
 
-  if(!fullname || !email){
+  if(!(fullname || email)){
     throw new ApiError(400, "All fields are required")
 }
    const user =  await User.findByIdAndUpdate( // findByIdAndUpdate -Kisi particular _id wale document ko find karo aur usko update karo.
@@ -321,11 +326,11 @@ const avatar = await uploadOnCloudinary(avatarLocalPath) //Local image ko Cloudi
 if(!avatar.url){ //Cloudinary se URL mila ya nahi check karo.
   throw new ApiError(400, "Something went wrong while uploading avatar")
 }
-    const user = await User.findByIdAndUpdate( //Currently logged-in user ko find karke uska avatar update karo.
+    const user = await User.findByIdAndUpdate( // Currently logged-in user ko find karke uska avatar update karo.
       req.user?._id,
       {
         $set: {
-          avatar: avatar.url //MongoDB me Cloudinary URL save karo.
+          avatar: avatar.url //  MongoDB me Cloudinary URL save karo.
         }
       },
       {new: true}
