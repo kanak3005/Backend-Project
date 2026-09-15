@@ -203,7 +203,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     );
 });
 
-const updatePlaylist = asyncHandler(async (req, res) => {
+const updatedPlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
      // 1. Validate playlistId

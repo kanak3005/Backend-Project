@@ -1,5 +1,5 @@
 import mongoose, {isValidObjectId} from "mongoose"
-import { Comment } from "../models/comment.model" // iske through hum comment find,update, create , delete kar skte hai 
+import { Comment } from "../models/comment.model.js" // iske through hum comment find,update, create , delete kar skte hai 
 import { Video } from "../models/video.model.js" //Ye check karne ke liye use hota hai ki jis video par comment kiya ja raha hai, woh video actually exist karti hai ya nahi.
 
 import { ApiError } from "../utils/ApiError.js"
@@ -45,7 +45,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 })
 .skip(skip)
 .limit(limitNumber)
-})
+
 // Ye given video ke total comments count karta hai.
 const totalComments = await Comment.countDocuments({
         video: videoId
@@ -59,7 +59,7 @@ return res.status(200).json(
     new ApiResponse(
         200,
         {
-            Comment,
+            comments,
             pagination: {
                 currentPage: pageNumber,
                 limit: limitNumber,
@@ -72,6 +72,7 @@ return res.status(200).json(
         "Video comments fetched successfully"
     )
 )
+})
 
 
 // add a new Comments

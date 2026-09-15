@@ -271,7 +271,7 @@ throw new ApiError(401, error?.message || "Invalid refresh token")
 
 const changePassword = asyncHandler(async (req, res) => {
   const {oldPassword, newPassword} = req.body
-  const user = User.findById(req.user?._id) // req.user - ye auth.middleware.js m set hua h, ye user ka data contain krta h vha se hum user ki id le rhe h
+  const user = await User.findById(req.user?._id) // req.user - ye auth.middleware.js m set hua h, ye user ka data contain krta h vha se hum user ki id le rhe h
  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword) // isPasswordCorrect - ye user.model.js m likha h, ye check karega ki entered password stored hash ke corresponding hai ya nahi.
   if(!isPasswordCorrect){
     throw new ApiError(400, "Old password is incorrect")
@@ -382,7 +382,7 @@ const getUserChannelProfile =  asyncHandler(async(req, res) => {
    {
     // humhe pw channel ke subscriber count krne h - toh hum har document m vo channel find krke count krenge ki us channel ke kitne subscribers h
     $lookup:{ //Subscribers find karna
-      from: " subscriptions", // subscription collection me jao
+      from: "subscriptions", // subscription collection me jao
       localField: "_id", // Current User document ki _id ko use karo. _id = user1
       foreignField: "channel", // subscriptions collection me channel field check kro. user._id = subscription.channe match krega
       as: "subscribers" // Jo matching subscriptions mili hain, unko ek array me store karo:
