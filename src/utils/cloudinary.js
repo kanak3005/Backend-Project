@@ -28,4 +28,24 @@ import fs from 'fs';
         return null;
     }
 }
-    export {uploadOnCloudinary}
+
+// Purana file (avatar/coverImage) Cloudinary se delete karne ke liye.
+// Hume sirf URL store karte hai, public_id nahi — isliye URL se hi public_id nikal rahe hai.
+const deleteFromCloudinary = async(fileUrl) => {
+    try{
+        if(!fileUrl) return null;
+        // Cloudinary URL kuch aisa dikhta h:
+        // https://res.cloudinary.com/<cloud_name>/image/upload/v1234567890/abc123xyz.jpg
+        // Hume sirf last part chahiye "abc123xyz" (extension ke bina) - yehi public_id hai
+        const urlParts = fileUrl.split("/")
+        const fileNameWithExtension = urlParts[urlParts.length - 1] // "abc123xyz.jpg"
+        const publicId = fileNameWithExtension.split(".")[0] // "abc123xyz"
+
+        const response = await cloudinary.uploader.destroy(publicId)
+        return response
+    } catch(error){
+        console.log("Error while deleting file from cloudinary", error)
+        return null
+    }
+}
+    export {uploadOnCloudinary, deleteFromCloudinary}
