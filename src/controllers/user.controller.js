@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiError} from "../utils/ApiError.js"
 import {User} from"../models/user.model.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadOnCloudinary, deleteFromCloudinary} from "../utils/cloudinary.js"
 import { upload } from '../middlewares/multer.middleware.js';
 import { Subscription } from "../models/subscription.model.js";
 import { ApiResponse } from '../utils/ApiResponse.js';
@@ -234,7 +234,7 @@ const decodedToken =  jwt.verify(
     process.env.REFRESH_TOKEN_SECRET
 
   )
-  const user = User.findById(decodedToken?._id)
+  const user = await User.findById(decodedToken?._id)
 
   if(!user){
     throw new ApiError(401, "Invalid refreshtoken")
@@ -248,13 +248,13 @@ const options={
   httpOnly: true,
   secure: true
 }
-const {accessToken, newRefreshToken} = await 
-generateAccessAndRefreshTokens(user,_id)
+const {accessToken, refreshToken: newRefreshToken} = await
+generateAccessAndRefreshTokens(user._id)
 
 return res
 .status(200)
-.cookie("accessToken", options)
-.cookie("newRefreshToken", options)
+.cookie("accessToken", accessToken, options)
+.cookie("refreshToken", newRefreshToken, options)
 .json(
   new ApiResponse(
     200,
@@ -326,6 +326,10 @@ const avatar = await uploadOnCloudinary(avatarLocalPath) //Local image ko Cloudi
 if(!avatar.url){ //Cloudinary se URL mila ya nahi check karo.
   throw new ApiError(400, "Something went wrong while uploading avatar")
 }
+
+// purana avatar URL nikal lo update se pehle, delete karne ke liye baad me
+const oldAvatarUrl = req.user?.avatar
+
     const user = await User.findByIdAndUpdate( // Currently logged-in user ko find karke uska avatar update karo.
       req.user?._id,
       {
@@ -335,9 +339,11 @@ if(!avatar.url){ //Cloudinary se URL mila ya nahi check karo.
       },
       {new: true}
     ).select("-password")
-    // delete old avatar from cloudinary
- const oldAvatarPublicId = user.avatar?.public_id;
-await deleteFromCloudinary(oldAvatarPublicId); 
+
+    // naya avatar successfully save hone ke baad hi purana avatar delete karo
+    if(oldAvatarUrl){
+      await deleteFromCloudinary(oldAvatarUrl)
+    }
 
     return res
     .status(200)

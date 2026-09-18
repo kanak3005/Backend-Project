@@ -20,7 +20,7 @@ const videoSchema = new Schema(
         required: true,
       },
        duration:{
-      type: Number,  // cloudnery 
+      type: Number,
         required: true,
       },
       views:{
@@ -31,7 +31,7 @@ const videoSchema = new Schema(
         type: Boolean,
         default: true,
       },
-      owner: { //Video kisne upload ki?
+      owner: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User',
       }

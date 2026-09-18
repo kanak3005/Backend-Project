@@ -1,9 +1,9 @@
 import mongoose, {isValidObjectId} from "mongoose";
-import { Playlist } from "../models/playlist.model";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
-import { User } from "../models/user.model";
+import { Playlist } from "../models/playlist.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/user.model.js";
 
 const createPlaylist = asyncHandler( async ( req, res) => {
     const { name, description } = req.body;
@@ -39,7 +39,7 @@ const createPlaylist = asyncHandler( async ( req, res) => {
      )
 })
 //Given userId ke saare playlists database se fetch karna.
-const getUserPlaylist = asyncHandler(async(req, res) => {
+const getUserPlaylists = asyncHandler(async(req, res) => {
     const {userId} = req.params;
     if(!isValidObjectId(userId)){
         throw new ApiError(400, "UserId is not Valid")
@@ -143,14 +143,14 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Playlist not found");
     }
      // check playlist owner 
-     if(!playlist.owner.toString() !== req.user?._id.toString()){
+     if(playlist.owner.toString() !== req.user?._id.toString()){
          throw new ApiError(
             403,
             "You are not authorized to modify this playlist"
         );
      }
     // 4. Remove video from videos array
-    const updatePlaylist = await Playlist.findByIdAndUpdate(
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         {
            $pull: {
@@ -203,7 +203,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     );
 });
 
-const updatedPlaylist = asyncHandler(async (req, res) => {
+const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
      // 1. Validate playlistId
