@@ -88,17 +88,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     );
 });
 
-const addVideoToPlaylist = asyncHandler(async (req, res) => {
-    const { playlistId, videoId } = req.params;
 
-    if (!isValidObjectId(playlistId) || !isValidObjectId(videoId)) {
-        throw new ApiError(400, "Invalid playlistId or videoId");
-    }
-
-    const playlist = await Playlist.findById(playlistId);
-    if (!playlist) {
-        throw new ApiError(404, "Playlist not found");
-    }
   //findByIdAndUpdate- Mongoose ka method hai jo:
 // Playlist ko uski ID se find karta hai
 // Us playlist mein update karta hai
@@ -108,6 +98,26 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 //     update, -> { $push: ... } - Kya update karna hai
 //     options -> { new: true } - Updated playlist return karo
 // )
+const addVideoToPlaylist = asyncHandler(async (req, res) => {
+    const { playlistId, videoId } = req.params;
+
+    if (!isValidObjectId(playlistId) || !isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid playlistId or videoId");
+    }
+
+        const playlist = await Playlist.findById(playlistId);
+    if (!playlist) {
+        throw new ApiError(404, "Playlist not found");
+    }
+
+    // check playlist owner - sirf playlist ka owner hi usme video add kar sake
+    if (playlist.owner.toString() !== req.user?._id.toString()) {
+        throw new ApiError(
+            403,
+            "You are not authorized to modify this playlist"
+        );
+    }
+  //findByIdAndUpdate- Mongoose ka method hai jo:
     const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         {
