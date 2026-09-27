@@ -222,8 +222,7 @@ status(200)
 })
 //Jab access token expire ho jaye, tab user ko dobara login karaye bina ek naya access token generate karna.
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
-
+ const incomingRefreshToken = req.cookies.refreshToken || req.body?.refreshToken
 if (!incomingRefreshToken){
   throw new ApiError(401, "unauthorized request")
 }
