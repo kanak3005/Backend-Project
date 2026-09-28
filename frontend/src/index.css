@@ -10,12 +10,35 @@ html {
 
 body {
   @apply bg-surface text-gray-100 font-sans antialiased;
+  min-width: 320px;
+  background-image:
+    radial-gradient(ellipse at 72% -18%, rgba(124, 58, 237, 0.12), transparent 42%),
+    linear-gradient(180deg, #0b0b12 0%, #0a0a0f 48%, #0a0a0f 100%);
+  background-attachment: fixed;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  transition-duration: 180ms;
+}
+
+::selection {
+  color: #fff;
+  background: rgba(124, 58, 237, 0.55);
 }
 
 /* Thin custom scrollbar - dark theme ke liye default scrollbar bahut chubhta hai */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -23,4 +46,15 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: theme('colors.surface.border');
   border-radius: 9999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

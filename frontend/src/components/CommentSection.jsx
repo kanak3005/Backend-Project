@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addComment, deleteComment, getVideoComments, updateComment } from "../api/comment.api";
+import { toggleCommentLike } from "../api/like.api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import CommentItem from "./CommentItem";
@@ -77,6 +78,16 @@ export default function CommentSection({ videoId }) {
     }
   };
 
+  const handleToggleLike = async (commentId) => {
+    try {
+      const response = await toggleCommentLike(commentId);
+      return response.data.data.liked;
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Could not update comment like.", "error");
+      return null;
+    }
+  };
+
   return (
     <div>
       <h2 className="mb-4 text-base font-semibold text-white">
@@ -116,6 +127,7 @@ export default function CommentSection({ videoId }) {
               comment={comment}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
+              onToggleLike={handleToggleLike}
             />
           ))}
         </div>

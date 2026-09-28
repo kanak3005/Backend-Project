@@ -321,6 +321,12 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     await video.save() //MongoDB mein updated views save.
 
+    if (req.user?._id) {
+        await User.findByIdAndUpdate(req.user._id, {
+            $addToSet: { watchHistory: video._id },
+        })
+    }
+
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -554,7 +560,20 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 
     video.isPublished = !video.isPublished
 
-    await video.save()
+        await video.save() //MongoDB mein updated views save.
+
+    // Watch history record karo - sirf logged-in user ke liye (guest ke liye req.user hota hi nahi)
+    if (req.user) {
+        // 1) pehle purani entry hatao, taaki same video dobara dekhne par duplicate na bane
+        await User.findByIdAndUpdate(req.user._id, {
+            $pull: { watchHistory: video._id }
+        })
+        // 2) phir array ke END me push karo (last = sabse recent).
+        //    $slice: -100 ka matlab sirf last 100 videos rakho, array unlimited na badhe
+        await User.findByIdAndUpdate(req.user._id, {
+            $push: { watchHistory: { $each: [video._id], $slice: -100 } }
+        })
+    }
 
     return res.status(200).json(
         new ApiResponse(

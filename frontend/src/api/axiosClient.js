@@ -3,7 +3,9 @@ import axios from "axios";
 // Ye ek hi axios instance hai jo poori app use karegi.
 // Isse hume baar baar base URL aur headers likhne ki zaroorat nahi padegi.
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // .env se backend ka URL aata hai
+  // Dev uses Vite's /api proxy when no local API URL is configured.
+  // Production deployments should set VITE_API_BASE_URL explicitly.
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
   withCredentials: true, // IMPORTANT: isse browser accessToken/refreshToken cookies
   // automatically har request ke saath backend ko bhejega (backend cookie-based auth use karta hai)
 });

@@ -9,6 +9,8 @@ import Channel from "./pages/Channel";
 import UploadVideo from "./pages/UploadVideo";
 import EditVideo from "./pages/EditVideo";
 import Dashboard from "./pages/Dashboard";
+import Playlist from "./pages/Playlist";
+import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
         <Route path="/search" element={<Home />} />
         <Route path="/watch/:videoId" element={<Watch />} />
         <Route path="/channel/:username" element={<Channel />} />
+        <Route path="/playlist/:playlistId" element={<Playlist />} />
 
         {/* PROTECTED - login required, warna ProtectedRoute /login par bhej dega */}
         <Route
@@ -52,6 +55,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
             </ProtectedRoute>
           }
         />
