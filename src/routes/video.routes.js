@@ -8,7 +8,7 @@ import {
     updateVideo,
 } from "../controllers/video.controller.js"
 
-import {verifyJWT} from "../middlewares/auth.middleware.js"  //User logged in/authenticated hai ya nahi?
+import {verifyJWT, optionalVerifyJWT} from "../middlewares/auth.middleware.js"  // ek hi import line - dono ek saath
 import {upload} from "../middlewares/multer.middleware.js"  //upload ka use files/images/videos receive karne ke liye hota hai.
 
 const router = Router(); //Ab router ke andar hum video ke routes define karenge.
@@ -35,8 +35,8 @@ router
     );
 
 router
-    .route("/:videoId") //Yahan :videoId dynamic parameter hai.
-    .get(getVideoById)  //Public: Specific video ki information lao.
+    .route("/:videoId") //Yahan :videoId dynamic parameter hai. (SIRF EK BAAR define karo)
+    .get(optionalVerifyJWT, getVideoById)  //Public playback; valid session ho to req.user attach hota hai (watch history ke liye).
     .delete(verifyJWT, deleteVideo) //Protected: Specific video delete karo (owner-only check controller ke andar hai).
     .patch(verifyJWT, upload.single("thumbnail"), updateVideo); // Protected: PATCH ka use existing video ko update karne ke liye hai.
 
@@ -47,7 +47,7 @@ export default router
 //Router
 //  ├── GET    /                         → getAllVideos
 //  ├── POST   /                         → publishAVideo
-//  ├── GET    /:videoId                 → getVideoById
+//  ├── GET    /:videoId                 → getVideoById (optional auth)
 //  ├── PATCH  /:videoId                 → updateVideo
 //  ├── DELETE /:videoId                 → deleteVideo
 //  └── PATCH  /toggle/publish/:videoId  → togglePublishStatus

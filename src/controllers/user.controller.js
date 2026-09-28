@@ -488,11 +488,24 @@ const user = await User.aggregate([ // users collection ke data par multiple dat
     }
   }
 ])
+
+
+
+
+// $lookup videos ko array ke order me NAHI deta (database ke natural order me deta hai).
+// Isliye user ke watchHistory array (last = sabse recent) ke hisaab se khud sort karte hai.
+const historyIds = (req.user?.watchHistory || []).map((id) => id.toString())
+const watchedVideos = user[0]?.watchHistory || []
+watchedVideos.sort(
+  (a, b) => historyIds.indexOf(b._id.toString()) - historyIds.indexOf(a._id.toString())
+)
+
 return res
 .status(200)
-.json(new ApiResponse(200, user[0]?.watchHistory, "Watch history fetched successfully")) //Aggregation always returns an array.
+.json(new ApiResponse(200, watchedVideos, "Watch history fetched successfully"))
+}) 
 // Humne $match mein _id se ek specific user find kiya hai.
-})
+
 
 export { 
   registerUser,

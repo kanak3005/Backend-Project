@@ -29,7 +29,11 @@ export default function Home() {
   }, [query, sort]);
 
   const fetchVideos = async (pageToFetch, replace) => {
-    replace ? setIsLoading(true) : setIsLoadingMore(true);
+    if (replace) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
     setError("");
     try {
       const sortOption = SORT_OPTIONS.find((s) => s.value === sort);
@@ -41,7 +45,10 @@ export default function Home() {
         sortBy: sortOption.sortBy,
         sortType: sortOption.sortType,
       });
-      const data = response.data.data; // mongoose-aggregate-paginate-v2 ka shape: { docs, hasNextPage, ... }
+      const data = response.data?.data; // mongoose-aggregate-paginate-v2 ka shape: { docs, hasNextPage, ... }
+      if (!Array.isArray(data?.docs)) {
+        throw new Error("Video service returned an unexpected response.");
+      }
       setVideos((prev) => (replace ? data.docs : [...prev, ...data.docs]));
       setHasNextPage(data.hasNextPage);
     } catch (err) {
@@ -59,15 +66,24 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-white">
-          {query ? `Results for "${query}"` : "Recommended"}
-        </h1>
+    <div className="mx-auto max-w-[1600px] px-5 py-7 sm:px-8 lg:px-10">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
+            {query ? "Search" : "Your next favorite"}
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            {query ? `Results for "${query}"` : "Recommended"}
+          </h1>
+          <p className="mt-1.5 text-sm text-gray-500">
+            {query ? "Videos matching your search" : "Discover videos from the Vuelo community"}
+          </p>
+        </div>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="rounded-lg border border-surface-border bg-surface-card px-3 py-1.5 text-sm text-gray-200 outline-none focus:border-brand-500"
+          aria-label="Sort videos"
+          className="rounded-xl border border-white/[0.08] bg-surface-card px-3.5 py-2.5 text-sm text-gray-200 outline-none transition focus:border-brand-500"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>

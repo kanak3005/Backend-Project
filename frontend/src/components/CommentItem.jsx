@@ -1,18 +1,36 @@
 import { useState } from "react";
-import { MoreVertical, Trash2, Pencil } from "lucide-react";
+import { MoreVertical, Trash2, Pencil, ThumbsUp } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { formatRelativeTime } from "../utils/formatters";
 
 // props.comment shape (backend se aata hai):
 // { _id, content, createdAt, owner: { _id, username, fullname, avatar } }
-export default function CommentItem({ comment, onUpdate, onDelete }) {
-  const { user } = useAuth();
+export default function CommentItem({ comment, onUpdate, onDelete, onToggleLike }) {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const isOwner = user?._id === comment.owner?._id;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
   const [isSaving, setIsSaving] = useState(false);
+  const [liked, setLiked] = useState(null);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: { pathname: window.location.pathname } } });
+      return;
+    }
+    setIsLiking(true);
+    try {
+      const nextLiked = await onToggleLike(comment._id);
+      if (typeof nextLiked === "boolean") setLiked(nextLiked);
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!editedContent.trim()) return;
@@ -70,6 +88,19 @@ export default function CommentItem({ comment, onUpdate, onDelete }) {
         ) : (
           <p className="mt-1 whitespace-pre-wrap text-sm text-gray-300">{comment.content}</p>
         )}
+        <button
+          onClick={handleLike}
+          disabled={isLiking}
+          aria-pressed={liked === true}
+          className={`mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition disabled:opacity-50 ${
+            liked
+              ? "bg-brand-500/10 text-brand-300"
+              : "text-gray-500 hover:bg-surface-hover hover:text-gray-200"
+          }`}
+        >
+          <ThumbsUp size={13} className={liked ? "fill-current" : ""} />
+          {isLiking ? "Updating..." : liked ? "Liked" : "Like"}
+        </button>
       </div>
 
       {isOwner && !isEditing && (

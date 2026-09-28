@@ -53,3 +53,50 @@ next() //Authentication successful. Ab request ko aage bhejo.
 }
 
 })
+
+export const verifyJWTIfPresent = asyncHandler(async (req, _, next) => {
+    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+
+    if (!token) {
+        return next()
+    }
+
+    let decodedToken
+    try {
+        decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+    } catch {
+        return next()
+    }
+
+    if (!decodedToken?._id) {
+        return next()
+    }
+
+    const user = await User.findById(decodedToken._id).select("-password -refreshToken")
+
+    if (user) {
+        req.user = user
+    }
+
+    return next()
+
+
+})
+// Optional auth: token ho aur valid ho to req.user set kar do, warna user ko GUEST maan ke aage badh jao.
+// verifyJWT ki tarah 401 NAHI dega - isliye public routes (jaise watch page) par safely laga sakte hai.
+export const optionalVerifyJWT = asyncHandler(async (req, _, next) => {
+    try {
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+
+        if (token) {
+            const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+            const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+            if (user) {
+                req.user = user
+            }
+        }
+    } catch (error) {
+        // token expired / invalid hai - koi baat nahi, guest ki tarah treat karo
+    }
+    next() // next() try ke bahar hai, taaki aage ke handlers ke errors yahan swallow na ho
+})
