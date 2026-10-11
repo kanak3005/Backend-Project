@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+ import mongoose from "mongoose";
 import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiError} from "../utils/ApiError.js"
 import {User} from"../models/user.model.js"
@@ -29,7 +29,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
      user.refreshToken = refreshToken
     await user.save({ validateBeforeSave: false }) 
 //validateBeforeSave: false ka matlab:
-//  Save karte waqt Mongoose ki normal validation dobara mat chalao.
+//  Save karte waqt Mongoose ki normal validation dobara mat chalao. 
+// kyuki firr ye password wagera lega validate krne ke liye - toh hum bss islye false krte hai ki validation kch mtt lgao bss save krdo db mei
 //Ye yaha isliye commonly use kiya jata hai kyunki hum sirf refreshToken update kar rahe hain.
     return {accessToken, refreshToken}
   }
