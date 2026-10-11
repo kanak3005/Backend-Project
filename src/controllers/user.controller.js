@@ -157,7 +157,12 @@ if(!user){
   throw new ApiError(404, "User Does Not Exist")
 }
 //check password
-const isPasswordValid = await user.isPasswordCorrect(password)
+// Schema method define → Model se document fetch → Document par method call
+//  Actual mein user ek Mongoose document hota hai, normal JavaScript object nahi.
+// Isi Mongoose document par isPasswordCorrect() method available hai, kyunki tumne usse userSchema.methods mein define kiya tha.
+const isPasswordValid = await user.isPasswordCorrect(password) // yha maine user db se nikala or jo method humhe userSchema.methods.isPasswordCorrect isko hum use kr skte ha
+// kyuki ye method h isko hum call kr skte hai
+ 
 
 if(!isPasswordValid){
   throw new ApiError(404, "Password is incorrect");
