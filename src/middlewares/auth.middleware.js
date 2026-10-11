@@ -7,8 +7,17 @@ import jwt from "jsonwebtoken";
 
 export const verifyJWT = asyncHandler(async(req, _, next) => {
 try{
-    const token = req.cookies?.accessToken || req.header
-("Authorization")?.replace("Bearer ", "")
+const token = req.cookies?.accessToken || req.header
+("Authorization")?.replace("Bearer ", "") 
+    //Maan lo frontend request mein ye header bhejta hai:
+// Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+// Toh: req.header("Authorization") -> poori string return karega:
+// Bearer eyJhbGciOiJIUzI1NiIs...
+// Phir: .replace("Bearer ", "")
+// Bearer  prefix remove karke sirf token return karega.
+// Lekin req.header() ko kaise pata ki Authorization header hai?
+// Kyunki frontend request ke saath header bhejta hai. Express us incoming HTTP request ko req object mein represent karta hai.
+
 
 if(!token){
     throw new ApiError(401, "Unauthorized request")
