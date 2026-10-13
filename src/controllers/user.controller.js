@@ -458,7 +458,11 @@ const user = await User.aggregate([ // users collection ke data par multiple dat
       _id: new mongoose.Types.ObjectId(req.user?._id) //Agar req.user._id string form mein hai, to hum usko MongoDB ObjectId mein convert kar rahe hain.
     }
   },{
-    //User ki watchHistory mein jo Video IDs hain, un IDs se videos collection ke actual video documents nikalna.
+// from: "videos" ->	Videos collection mein jao
+// localField: "watchHistory"	-> Kanak ke watched video IDs lo
+// foreignField: "_id"	-> Videos collection mein un IDs ko match karo
+// as: "watchHistory" -> 	Matching video documents ko is array mein store karo
+//User ki watchHistory mein jo Video IDs hain, un IDs se videos collection ke actual video documents nikalna.
     $lookup: { // mongoDb ka Join operation
       from: "videos", // Videos collection se data lao.
       localField: "watchHistory", // Current collection (users) mein jis field se matching karni hai, uska naam.
